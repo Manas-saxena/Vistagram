@@ -13,6 +13,32 @@
   ],
   "item": [
     {
+      "name": "Auth: Login (POST /api/auth/login)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"testuser\"\n}" },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json && json.token) { pm.collectionVariables.set('userId', json.token); }"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
       "name": "Health: GET /healthz",
       "request": {
         "method": "GET",
