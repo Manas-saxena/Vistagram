@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Feed from './pages/Feed'
+import NewPost from './pages/NewPost'
 
 function App() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('vistagram_token') : null
@@ -9,6 +10,7 @@ function App() {
       <Routes>
         <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/" element={token ? <Feed /> : <Navigate to="/login" replace />} />
+        <Route path="/new" element={token ? <NewPost /> : <Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to={token ? '/' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>

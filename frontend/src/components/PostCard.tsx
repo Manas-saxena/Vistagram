@@ -25,8 +25,13 @@ export default function PostCard({ post, liked, likeCount, shareCount, onToggleL
           <span className="text-xs text-white/60">{timeAgo(post.createdAt)}</span>
         </div>
       </header>
-      <div className="aspect-square w-full bg-black">
-        <img src={post.imageUrl} alt={post.caption} className="h-full w-full object-cover" loading="lazy" />
+      <div className="w-full bg-black flex items-center justify-center">
+        <img
+          src={post.imageUrl}
+          alt={post.caption}
+          className="w-full h-auto max-h-[70vh] object-contain"
+          loading="lazy"
+        />
       </div>
       <div className="p-4">
         <p className="mb-3 line-clamp-2 text-white/90">{post.caption}</p>

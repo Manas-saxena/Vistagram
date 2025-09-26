@@ -92,6 +92,7 @@ export default function Feed() {
         {!nextCursor && !loading && items.length > 0 && (
           <div className="text-center py-6 text-white/50">You’re all caught up</div>
         )}
+        <a href="/new" className="fixed bottom-6 right-6 rounded-full bg-violet-600 hover:bg-violet-700 text-white px-5 py-3 shadow-xl">New Post</a>
       </div>
     </div>
   );
