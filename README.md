@@ -1,1 +1,2 @@
 # Vistagram
+init commit 
