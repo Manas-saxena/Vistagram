@@ -1,26 +1,18 @@
-import { useState } from 'react';
 import { timeAgo } from '../utils/time';
-import { copyToClipboard } from '../utils/copy';
 import LikeButton from './LikeButton';
 import ShareButton from './ShareButton';
 import type { Post } from '../types/post';
 
-type Props = { post: Post };
+type Props = {
+  post: Post;
+  liked: boolean;
+  likeCount: number;
+  shareCount: number;
+  onToggleLike: () => void;
+  onShare: () => void;
+};
 
-export default function PostCard({ post }: Props) {
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likeCount);
-  const [shareCount, setShareCount] = useState(post.shareCount);
-
-  const onToggleLike = () => {
-    setLiked((v) => !v);
-    setLikeCount((c) => (liked ? Math.max(0, c - 1) : c + 1));
-  };
-
-  const onShare = async () => {
-    const ok = await copyToClipboard(`${window.location.origin}/p/${post.id}`);
-    if (ok) setShareCount((c) => c + 1);
-  };
+export default function PostCard({ post, liked, likeCount, shareCount, onToggleLike, onShare }: Props) {
 
   return (
     <article className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl overflow-hidden text-white">
