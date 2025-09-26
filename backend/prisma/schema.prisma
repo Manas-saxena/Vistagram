@@ -1,0 +1,56 @@
+// Prisma schema for Vistagram minimal backend
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // change to "postgresql" in prod deployments
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  createdAt DateTime @default(now())
+  posts     Post[]
+  likes     Like[]
+  shares    Share[]
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  imageUrl   String
+  caption    String
+  likeCount  Int      @default(0)
+  shareCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  likes      Like[]
+  shares     Share[]
+
+  @@index([createdAt, id])
+}
+
+model Like {
+  postId    String
+  userId    String
+  post      Post   @relation(fields: [postId], references: [id])
+  user      User   @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([postId, userId])
+}
+
+model Share {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String?
+  channel   String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+
