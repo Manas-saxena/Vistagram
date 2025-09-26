@@ -65,7 +65,19 @@ export default function Feed() {
   }
 
   async function handleShare(id: string) {
-    const ok = await copyToClipboard(`${window.location.origin}/p/${id}`);
+    const url = `${window.location.origin}/p/${id}`;
+    let ok = false;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Vistagram', url });
+        ok = true;
+      } catch {
+        ok = false;
+      }
+    }
+    if (!ok) {
+      ok = await copyToClipboard(url);
+    }
     if (ok) {
       setShareCountMap((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 }));
       try { await sharePost(id); } catch {}
