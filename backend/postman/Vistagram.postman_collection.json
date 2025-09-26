@@ -1,0 +1,146 @@
+{
+  "info": {
+    "_postman_id": "3f0a8b9e-4e5a-4b6f-9b9e-1234567890ab",
+    "name": "Vistagram Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000", "type": "string" },
+    { "key": "userId", "value": "testuser123", "type": "string" },
+    { "key": "postId", "value": "", "type": "string" },
+    { "key": "cursor", "value": "", "type": "string" },
+    { "key": "limit", "value": "10", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health: GET /healthz",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/healthz",
+          "host": ["{{baseUrl}}"],
+          "path": ["healthz"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Posts: Create (POST /api/posts)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-user-id", "value": "{{userId}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"imageUrl\": \"https://picsum.photos/seed/vista/800/600\",\n  \"caption\": \"First post via Postman\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/posts",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "posts"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json && json.id) { pm.collectionVariables.set('postId', json.id); }"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Posts: List (GET /api/posts)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/posts?limit={{limit}}&cursor={{cursor}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "posts"],
+          "query": [
+            { "key": "limit", "value": "{{limit}}" },
+            { "key": "cursor", "value": "{{cursor}}" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json && json.items && json.items.length > 0 && !pm.collectionVariables.get('postId')) { pm.collectionVariables.set('postId', json.items[0].id); }",
+              "if (json && json.nextCursor) { pm.collectionVariables.set('cursor', json.nextCursor); }"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Posts: Get by ID (GET /api/posts/:id)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/posts/{{postId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "posts", "{{postId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Posts: Like (PUT /api/posts/:id/like)",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "x-user-id", "value": "{{userId}}" } ],
+        "url": {
+          "raw": "{{baseUrl}}/api/posts/{{postId}}/like",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "posts", "{{postId}}", "like"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Posts: Unlike (DELETE /api/posts/:id/like)",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "x-user-id", "value": "{{userId}}" } ],
+        "url": {
+          "raw": "{{baseUrl}}/api/posts/{{postId}}/like",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "posts", "{{postId}}", "like"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Posts: Share (POST /api/posts/:id/share)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"channel\": \"copy_link\"\n}" },
+        "url": {
+          "raw": "{{baseUrl}}/api/posts/{{postId}}/share",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "posts", "{{postId}}", "share"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
+
+
