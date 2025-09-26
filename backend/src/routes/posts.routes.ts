@@ -4,8 +4,9 @@ import { createPost, getPost, listPosts, likePost, sharePost, unlikePost } from 
 
 const router = Router();
 
-router.get('/', listPosts);
-router.get('/:id', getPost);
+// Attach optionalAuth so we can compute likedByMe/share attribution
+router.get('/', optionalAuth, listPosts);
+router.get('/:id', optionalAuth, getPost);
 router.post('/', requireAuth, createPost);
 router.put('/:id/like', requireAuth, likePost);
 router.delete('/:id/like', requireAuth, unlikePost);

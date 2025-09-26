@@ -25,6 +25,7 @@ export async function createPost(req: Request, res: Response) {
 
 export async function listPosts(req: Request, res: Response) {
   try {
+    const user = (req as any).user;
     const limit = Math.min(Number(req.query.limit) || 20, 50);
     const cursor = (req.query.cursor as string) || null;
     let where: any = {};
@@ -34,11 +35,20 @@ export async function listPosts(req: Request, res: Response) {
         where = { OR: [{ createdAt: { lt: new Date(createdAtISO) } }, { createdAt: new Date(createdAtISO), id: { lt: id } }] };
       }
     }
-    const items = await prisma.post.findMany({
+    const itemsRaw = await prisma.post.findMany({
       where,
-      include: { user: { select: { id: true, username: true } } },
+      include: {
+        user: { select: { id: true, username: true } },
+        likes: user?.uid
+          ? { where: { userId: user.uid }, select: { userId: true } }
+          : false,
+      },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit,
+    });
+    const items = itemsRaw.map((p: any) => {
+      const { likes, ...rest } = p;
+      return { ...rest, likedByMe: Array.isArray(likes) && likes.length > 0 };
     });
     let nextCursor: string | null = null;
     if (items.length === limit) {
@@ -54,8 +64,19 @@ export async function listPosts(req: Request, res: Response) {
 
 export async function getPost(req: Request, res: Response) {
   try {
-    const post = await prisma.post.findUnique({ where: { id: req.params.id }, include: { user: { select: { id: true, username: true } } } });
-    if (!post) return res.status(404).json({ error: 'Not found' });
+    const user = (req as any).user;
+    const postRaw = await prisma.post.findUnique({
+      where: { id: req.params.id },
+      include: {
+        user: { select: { id: true, username: true } },
+        likes: user?.uid
+          ? { where: { userId: user.uid }, select: { userId: true } }
+          : false,
+      },
+    });
+    if (!postRaw) return res.status(404).json({ error: 'Not found' });
+    const { likes, ...rest } = postRaw as any;
+    const post = { ...rest, likedByMe: Array.isArray(likes) && likes.length > 0 };
     return res.json(post);
   } catch (err) {
     console.error(err);
@@ -100,11 +121,20 @@ export async function sharePost(req: Request, res: Response) {
     const user = (req as any).user; // optional
     const postId = req.params.id;
     const channel = (req.body?.channel as string) || 'copy_link';
+    let alreadyShared = false;
     await prisma.$transaction(async (tx) => {
-      await tx.share.create({ data: { postId, userId: user?.uid ?? null, channel } });
+      const userId = user?.uid ?? null;
+      if (userId) {
+        const already = await tx.share.findFirst({ where: { postId, userId } });
+        if (already) {
+          alreadyShared = true;
+          return;
+        }
+      }
+      await tx.share.create({ data: { postId, userId, channel } });
       await tx.post.update({ where: { id: postId }, data: { shareCount: { increment: 1 } } });
     });
-    return res.json({ ok: true });
+    return res.json({ ok: true, alreadyShared });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal Server Error' });
