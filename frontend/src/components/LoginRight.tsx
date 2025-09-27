@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginWithPassword } from '../services/auth';
+import toast from 'react-hot-toast';
 
 export default function LoginRight() {
   const [identifier, setIdentifier] = useState('');
@@ -17,9 +18,12 @@ export default function LoginRight() {
     setLoading(true);
     try {
       await loginWithPassword(identifier, password);
+      toast.success('Signed in');
       navigate('/', { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      const msg = err?.message || 'Login failed';
+      setError(null);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

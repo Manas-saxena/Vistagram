@@ -1,22 +1,25 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { randomUUID } from 'node:crypto';
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'dev_access_secret';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret';
-const ACCESS_TTL = process.env.JWT_ACCESS_TTL || '15m';
+const ACCESS_TTL: SignOptions['expiresIn'] = (process.env.JWT_ACCESS_TTL as any) || '15m';
 const REFRESH_TTL_DAYS = parseInt(process.env.JWT_REFRESH_TTL_DAYS || '30', 10);
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
 
 function signAccess(userId: string) {
-  return jwt.sign({}, ACCESS_SECRET, { subject: userId, expiresIn: ACCESS_TTL });
+  const opts: SignOptions = { expiresIn: ACCESS_TTL, subject: userId };
+  return jwt.sign({}, ACCESS_SECRET as jwt.Secret, opts);
 }
 
 function generateRefreshToken() {
   // Use random id inside JWT jti, but we persist a hash of the random token string separately
-  const jti = crypto.randomUUID();
-  const token = jwt.sign({ jti }, REFRESH_SECRET, { subject: 'refresh', expiresIn: `${REFRESH_TTL_DAYS}d` });
+  const jti = randomUUID();
+  const opts: SignOptions = { expiresIn: `${REFRESH_TTL_DAYS}d`, subject: 'refresh' };
+  const token = jwt.sign({ jti }, REFRESH_SECRET as jwt.Secret, opts);
   return { token, jti };
 }
 
@@ -43,7 +46,9 @@ export async function login(req: Request, res: Response) {
   try {
     const { emailOrUsername, password } = req.body || {};
     if (!emailOrUsername || !password) return res.status(400).json({ error: 'email/username and password required' });
-    const where = emailOrUsername.includes('@') ? { email: emailOrUsername.toLowerCase() } : { username: emailOrUsername.toLowerCase() };
+    const where = emailOrUsername.includes('@')
+      ? { email: emailOrUsername.toLowerCase() }
+      : { user: { username: emailOrUsername.toLowerCase() } };
     const auth = await prisma.localAuth.findFirst({ where, include: { user: true } });
     if (!auth) return res.status(401).json({ error: 'Invalid credentials' });
     const ok = await bcrypt.compare(password, auth.passwordHash);
@@ -69,12 +74,31 @@ export async function signup(req: Request, res: Response) {
     if (userNorm.length < 3) return res.status(400).json({ error: 'username too short' });
     if (String(password).length < 8) return res.status(400).json({ error: 'password too short' });
 
-    const exists = await prisma.localAuth.findFirst({ where: { OR: [{ email: emailNorm }, { user: { username: userNorm } }] } });
-    if (exists) return res.status(409).json({ error: 'email or username already in use' });
+    // Explicitly check both uniques to give a clear error and avoid hitting DB unique
+    const [emailTaken, usernameTaken] = await Promise.all([
+      prisma.localAuth.findUnique({ where: { email: emailNorm } }),
+      prisma.user.findUnique({ where: { username: userNorm } }),
+    ]);
+    if (emailTaken) return res.status(409).json({ error: 'email already in use' });
+    if (usernameTaken) return res.status(409).json({ error: 'username already in use' });
 
-    const user = await prisma.user.create({ data: { username: userNorm } });
+    let user;
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    await prisma.localAuth.create({ data: { userId: user.id, email: emailNorm, passwordHash } });
+    try {
+      await prisma.$transaction(async (tx) => {
+        user = await tx.user.create({ data: { username: userNorm } });
+        await tx.localAuth.create({ data: { userId: (user as any).id, email: emailNorm, passwordHash } });
+      });
+    } catch (e: any) {
+      if (e?.code === 'P2002') {
+        // Map unique violations explicitly
+        const target = e?.meta?.target as string[] | undefined;
+        if (target?.includes('username')) return res.status(409).json({ error: 'username already in use' });
+        if (target?.includes('email')) return res.status(409).json({ error: 'email already in use' });
+        return res.status(409).json({ error: 'email or username already in use' });
+      }
+      throw e;
+    }
 
     const accessToken = signAccess(user.id);
     const { token: refreshToken } = generateRefreshToken();

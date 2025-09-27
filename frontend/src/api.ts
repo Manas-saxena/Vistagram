@@ -14,8 +14,15 @@ export async function apiFetch(path: string, options: RequestInit = {}, retry = 
     if (newToken) return apiFetch(path, options, false);
   }
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
+    const ctErr = res.headers.get('content-type') || '';
+    if (ctErr.includes('application/json')) {
+      const js = await res.json().catch(() => ({}));
+      const msg = (js && (js.error || js.message)) || `Request failed: ${res.status}`;
+      throw new Error(msg);
+    } else {
+      const text = await res.text();
+      throw new Error(text || `Request failed: ${res.status}`);
+    }
   }
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('application/json')) return res.json();

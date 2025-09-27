@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { signup } from '../services/auth';
+import toast from 'react-hot-toast';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -15,9 +16,12 @@ export default function Signup() {
     setLoading(true);
     try {
       await signup(email, username, password);
+      toast.success('Account created');
       window.location.href = '/';
     } catch (err: any) {
-      setError(err.message || 'Signup failed');
+      const msg = err?.message || 'Signup failed';
+      setError(null);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

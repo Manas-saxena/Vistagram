@@ -1,4 +1,5 @@
 // Lightweight auth store with localStorage persistence
+import { apiFetch } from '../api';
 let accessToken: string | null = (typeof window !== 'undefined') ? localStorage.getItem('vistagram_token') : null;
 const listeners = new Set<() => void>();
 
@@ -16,40 +17,34 @@ export function subscribeAuth(cb: () => void) { listeners.add(cb); return () => 
 
 // API calls for auth
 export async function signup(email: string, username: string, password: string) {
-  const res = await fetch('/api/auth/signup', {
+  const data = await apiFetch('/api/auth/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ email, username, password }),
   });
-  if (!res.ok) throw new Error(await res.text());
-  const data = await res.json();
   setAccessToken(data.accessToken);
   return data;
 }
 
 export async function loginWithPassword(emailOrUsername: string, password: string) {
-  const res = await fetch('/api/auth/login', {
+  const data = await apiFetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ emailOrUsername, password }),
   });
-  if (!res.ok) throw new Error(await res.text());
-  const data = await res.json();
   setAccessToken(data.accessToken);
   return data;
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
-  const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
-  if (!res.ok) return null;
-  const data = await res.json();
+  // Use apiFetch with retry disabled to avoid recursion
+  const data = await apiFetch('/api/auth/refresh', { method: 'POST' }, false).catch(() => null as any);
+  if (!data) return null;
   setAccessToken(data.accessToken);
   return data.accessToken as string;
 }
 
 export async function logout() {
-  try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+  try { await apiFetch('/api/auth/logout', { method: 'POST' }); } catch {}
   setAccessToken(null);
 }
