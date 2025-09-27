@@ -15,3 +15,5 @@
   background-size: 200% 100%;
   animation: vistagram-shimmer 1.2s ease-in-out infinite;
 }
+
+button { cursor: pointer; }
