@@ -4,6 +4,7 @@ import LikeButton from './LikeButton';
 import ShareButton from './ShareButton';
 import type { Post } from '../types/post';
 import { likePost, sharePost, unlikePost } from '../services/posts';
+import toast from 'react-hot-toast';
 import { copyToClipboard } from '../utils/copy';
 
 type Props = { post: Post };
@@ -13,6 +14,7 @@ export default function PostCard({ post }: Props) {
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [shareCount, setShareCount] = useState(post.shareCount);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(post.imageUrl);
 
   async function handleToggleLike() {
     const wasLiked = liked;
@@ -24,6 +26,7 @@ export default function PostCard({ post }: Props) {
       // rollback
       setLiked(wasLiked);
       setLikeCount((c) => (wasLiked ? c + 1 : Math.max(0, c - 1)));
+      toast.error('Failed to update like');
     }
   }
 
@@ -35,8 +38,13 @@ export default function PostCard({ post }: Props) {
     }
     if (!ok) ok = await copyToClipboard(url);
     if (ok) {
-     
-      try { const res = await sharePost(post.id); if(!res.alreadyShared) {  setShareCount((c) => c + 1); } } catch {}
+      try {
+        const res = await sharePost(post.id) as any;
+        if (!res?.alreadyShared) setShareCount((c) => c + 1);
+        toast.success(res?.alreadyShared ? 'Already shared' : 'Link shared');
+      } catch {
+        toast.error('Share failed');
+      }
     }
   }
 
@@ -56,12 +64,12 @@ export default function PostCard({ post }: Props) {
           <div className="absolute inset-0 shimmer" />
         )}
         <img
-          src={post.imageUrl}
+          src={imgSrc}
           alt={post.caption}
           className={`w-full h-auto max-h-[70vh] object-contain transition-opacity ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
           onLoad={() => setImgLoaded(true)}
-          onError={() => setImgLoaded(true)}
+          onError={() => { setImgSrc('/image-fallback.svg'); setImgLoaded(true); }}
         />
       </div>
       <div className="p-4">

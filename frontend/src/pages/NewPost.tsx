@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ensureAnonSignIn, storage } from '../firebase';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { apiFetch } from '../api';
+import toast from 'react-hot-toast';
 
 type Mode = 'camera' | 'upload';
 
@@ -30,7 +31,7 @@ export default function NewPost() {
       }
     } catch (e) {
       console.error(e);
-      alert('Camera access denied. Use file upload.');
+      toast.error('Camera access denied. Use file upload.');
     }
   }
 
@@ -63,7 +64,7 @@ export default function NewPost() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file) return alert('Pick a photo or use the camera.');
+    if (!file) return toast.error('Pick a photo or use the camera.');
     setUploading(true);
     try {
       const uid = await ensureAnonSignIn();
@@ -75,9 +76,10 @@ export default function NewPost() {
       });
       const imageUrl = await getDownloadURL(storageRef);
       await apiFetch('/api/posts', { method: 'POST', body: JSON.stringify({ imageUrl, caption }) });
+      toast.success('Posted');
       window.location.href = '/';
     } catch (err: any) {
-      alert(err.message || 'Failed to create post');
+      toast.error(err.message || 'Failed to create post');
     } finally {
       setUploading(false);
     }

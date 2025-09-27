@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0ea5e9"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="mount" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.4"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="800" height="600" rx="18" fill="#0b1220"/>
+  <rect x="16" y="16" width="768" height="568" rx="14" fill="url(#bg)"/>
+  <!-- stylized mountains -->
+  <path d="M60 450 L200 320 L320 420 L420 300 L560 420 L740 360 L740 540 L60 540 Z" fill="url(#mount)" opacity="0.6"/>
+  <!-- camera glyph -->
+  <g filter="url(#shadow)">
+    <rect x="340" y="210" width="120" height="80" rx="12" fill="#0b1220" opacity="0.85"/>
+    <circle cx="400" cy="250" r="22" fill="#ffffff" opacity="0.9"/>
+    <rect x="356" y="195" width="28" height="16" rx="4" fill="#0b1220" opacity="0.85"/>
+  </g>
+  <text x="50%" y="520" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="18">Image unavailable</text>
+</svg>
+
+
