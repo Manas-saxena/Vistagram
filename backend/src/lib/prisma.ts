@@ -1,16 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
+// Ensure single Prisma instance
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+const prisma = globalForPrisma.prisma || new PrismaClient({
   log: ['query', 'info', 'warn', 'error'],
 });
 
-prisma.$connect()
-  .then(() => {
-    console.log('Successfully connected to database');
-  })
-  .catch((e) => {
-    console.error('Failed to connect to database:', e);
-    process.exit(1);  // Exit if we can't connect to DB
-  });
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
