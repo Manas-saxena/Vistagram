@@ -2,7 +2,7 @@
   "name": "vistagram-backend",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "npx tsc -p tsconfig.json",
