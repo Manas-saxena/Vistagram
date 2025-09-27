@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { randomUUID } from 'node:crypto';
+import { PrismaClient } from '@prisma/client';
+
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'dev_access_secret';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret';
@@ -85,7 +88,7 @@ export async function signup(req: Request, res: Response) {
     let user: any;
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
     try {
-      await prisma.$transaction(async (tx:any) => {
+      await prisma.$transaction(async (tx: TransactionClient) => {
         user = await tx.user.create({ data: { username: userNorm } });
         await tx.localAuth.create({ data: { userId: (user as any).id, email: emailNorm, passwordHash } });
       });
@@ -156,5 +159,3 @@ export async function logout(req: Request, res: Response) {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
-

@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
+import { Prisma, PrismaClient } from '@prisma/client';
+
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 export async function createPost(req: Request, res: Response) {
   try {
@@ -89,7 +92,7 @@ export async function likePost(req: Request, res: Response) {
     const user = (req as any).user;
     if (!user?.uid) return res.status(401).json({ error: 'Unauthorized' });
     const postId = req.params.id;
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       await tx.like.upsert({ where: { postId_userId: { postId, userId: user.uid } }, update: {}, create: { postId, userId: user.uid } });
       await tx.post.update({ where: { id: postId }, data: { likeCount: { increment: 1 } } });
     });
@@ -105,7 +108,7 @@ export async function unlikePost(req: Request, res: Response) {
     const user = (req as any).user;
     if (!user?.uid) return res.status(401).json({ error: 'Unauthorized' });
     const postId = req.params.id;
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       const deleted = await tx.like.deleteMany({ where: { postId, userId: user.uid } });
       if (deleted.count > 0) await tx.post.update({ where: { id: postId }, data: { likeCount: { decrement: 1 } } });
     });
@@ -122,7 +125,7 @@ export async function sharePost(req: Request, res: Response) {
     const postId = req.params.id;
     const channel = (req.body?.channel as string) || 'copy_link';
     let alreadyShared = false;
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       const userId = user?.uid ?? null;
       if (userId) {
         const already = await tx.share.findFirst({ where: { postId, userId } });
@@ -140,5 +143,3 @@ export async function sharePost(req: Request, res: Response) {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
-
