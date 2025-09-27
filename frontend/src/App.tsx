@@ -13,7 +13,9 @@ function App() {
 
   useEffect(() => {
     const unsub = subscribeAuth(() => setAuthToken(getAccessToken()));
-    return unsub;
+    return ()=>{
+      unsub()
+    };
   }, [])
 
   return (
