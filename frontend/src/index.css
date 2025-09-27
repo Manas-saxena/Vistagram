@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+/* Image shimmer skeleton */
+@keyframes vistagram-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.05) 0%,
+    rgba(255,255,255,0.12) 50%,
+    rgba(255,255,255,0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: vistagram-shimmer 1.2s ease-in-out infinite;
+}

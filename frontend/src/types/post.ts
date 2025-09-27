@@ -8,6 +8,7 @@ export type Post = {
   shareCount: number;
   createdAt: string;
   user: UserLite;
+  likedByMe?: boolean;
 };
 
 

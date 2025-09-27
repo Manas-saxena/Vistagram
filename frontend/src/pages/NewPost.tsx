@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ensureAnonSignIn, storage } from '../firebase';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { apiFetch } from '../api';
@@ -10,6 +11,7 @@ export default function NewPost() {
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<Mode>('upload');
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -97,7 +99,11 @@ export default function NewPost() {
 
           {/* Right: controls area */}
           <div className="rounded-xl border border-white/15 bg-white/5 p-4 flex flex-col">
-            <h1 className="text-2xl font-semibold mb-4">Create Post</h1>
+            <div className="mb-3 flex items-center justify-between">
+              <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white">← Back</button>
+              <h1 className="text-2xl font-semibold">Create Post</h1>
+              <span />
+            </div>
 
             {/* Mode Switcher */}
             <div className="inline-flex rounded-xl border border-white/15 overflow-hidden self-start mb-4">
