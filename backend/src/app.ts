@@ -8,7 +8,7 @@ import cookieParser from 'cookie-parser';
 const app = express();
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
-app.use(cors({ origin: FRONTEND_ORIGIN }));
+app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 

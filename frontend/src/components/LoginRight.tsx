@@ -1,24 +1,23 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { loginWithUsername, persistSession } from '../services/auth';
+import { useNavigate, Link } from 'react-router-dom';
+import { loginWithPassword } from '../services/auth';
 
 export default function LoginRight() {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [password, setPassword] = useState('');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!username.trim()) return setError('Enter a username');
+    if (!identifier.trim()) return setError('Enter email or username');
+    if (password.length < 1) return setError('Enter password');
     setLoading(true);
     try {
-      const res = await loginWithUsername(username);
-      if (res?.token) {
-        persistSession(res, username);
-        navigate('/', { replace: true });
-      }
+      await loginWithPassword(identifier, password);
+      navigate('/', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -38,13 +37,21 @@ export default function LoginRight() {
 
       <form onSubmit={onSubmit} className="space-y-3">
         <div>
-          <label className="mb-1 block text-sm text-white/70">Username</label>
+          <label className="mb-1 block text-sm text-white/70">Email or Username</label>
           <input
             className="w-full rounded-xl border border-white/20 bg-black/30 p-3 text-white placeholder-white/40 outline-none focus:border-violet-400"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="e.g. vistagramfan"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="e.g. vistagramfan or me@example.com"
             autoFocus
+          />
+          <label className="mb-1 mt-3 block text-sm text-white/70">Password</label>
+          <input
+            type="password"
+            className="w-full rounded-xl border border-white/20 bg-black/30 p-3 text-white placeholder-white/40 outline-none focus:border-violet-400"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Your password"
           />
         </div>
         {error && <p className="text-sm text-rose-300">{error}</p>}
@@ -56,6 +63,9 @@ export default function LoginRight() {
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+      <div className="mt-3 text-sm text-white/70">
+        No account? <Link to="/signup" className="text-violet-300 hover:text-violet-200">Sign up</Link>
+      </div>
     </div>
   );
 }

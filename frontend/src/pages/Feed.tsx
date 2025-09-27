@@ -11,6 +11,7 @@ export default function Feed() {
   const [error, setError] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const items = useMemo(() => pages.flat(), [pages]);
+  const didInitRef = useRef(false);
 
   async function fetchPage(cursor?: string | null) {
     try {
@@ -26,10 +27,12 @@ export default function Feed() {
     }
   }
 
-  useEffect(() => {
-    fetchPage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+useEffect(() => {
+  if (didInitRef.current) return;   // prevents StrictMode double-invoke
+  didInitRef.current = true;
+  fetchPage();
+}, []);
 
   useEffect(() => {
     const el = loadMoreRef.current;
