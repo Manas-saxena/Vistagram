@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import PostCard from '../components/PostCard';
 import type { Post } from '../types/post';
 import { listPosts } from '../services/posts';
+import { logout } from '../services/auth';
 
 export default function Feed() {
   const [pages, setPages] = useState<Post[][]>([]);
@@ -46,6 +47,16 @@ export default function Feed() {
 
   return (
     <div className="h-screen w-screen bg-slate-950 text-white overflow-auto">
+      <header className="sticky top-0 z-10 backdrop-blur bg-slate-950/70 border-b border-white/10">
+        <div className="mx-auto max-w-xl px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/vistagram-logo.svg" alt="Vistagram" className="h-7 w-7" />
+            <span className="font-semibold tracking-wide">Vistagram</span>
+          </div>
+          <button onClick={() => logout()} className="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10">Logout</button>
+        </div>
+      </header>
+
       <div className="mx-auto max-w-xl p-4 space-y-4 ">
         {items.map((p, index) => (
           <PostCard key={`${p.id}_${index}`} post={p} />
@@ -56,7 +67,7 @@ export default function Feed() {
         {!nextCursor && !loading && items.length > 0 && (
           <div className="text-center py-6 text-white/50">You’re all caught up</div>
         )}
-        <a href="/new" className="fixed bottom-6 right-6 rounded-full bg-violet-600 hover:bg-violet-700 text-white px-5 py-3 shadow-xl">New Post</a>
+        <a href="/new" className="fixed bottom-6 right-6 rounded-full bg-violet-600 hover:bg-violet-700 text-white px-5 py-3 shadow-xl">＋ New</a>
       </div>
     </div>
   );

@@ -11,10 +11,10 @@ function App() {
 
   useEffect(()=>{
     const handler = ()=>{
-        window?.addEventListener('vistagram-auth-changed', handler);
+       
       setAuthToken(localStorage.getItem('vistagram_token'));
     }
-
+    window?.addEventListener('vistagram-auth-changed', handler);
     return ()=>{
        window?.removeEventListener('vistagram-auth-changed', handler);
     }
