@@ -82,10 +82,10 @@ export async function signup(req: Request, res: Response) {
     if (emailTaken) return res.status(409).json({ error: 'email already in use' });
     if (usernameTaken) return res.status(409).json({ error: 'username already in use' });
 
-    let user;
+    let user: any;
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx:any) => {
         user = await tx.user.create({ data: { username: userNorm } });
         await tx.localAuth.create({ data: { userId: (user as any).id, email: emailNorm, passwordHash } });
       });
@@ -99,7 +99,7 @@ export async function signup(req: Request, res: Response) {
       }
       throw e;
     }
-
+    if (!user) return res.status(500).json({ error: 'Not getting user in signup' });
     const accessToken = signAccess(user.id);
     const { token: refreshToken } = generateRefreshToken();
     await persistRefresh(user.id, refreshToken, req);
