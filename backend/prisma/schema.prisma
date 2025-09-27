@@ -16,6 +16,8 @@ model User {
   posts     Post[]
   likes     Like[]
   shares    Share[]
+  localAuth LocalAuth?
+  refreshTokens RefreshToken[]
 }
 
 model Post {
@@ -29,8 +31,6 @@ model Post {
   createdAt  DateTime @default(now())
   likes      Like[]
   shares     Share[]
-
-  @@index([createdAt, id])
 }
 
 model Like {
@@ -53,6 +53,27 @@ model Share {
   user      User?    @relation(fields: [userId], references: [id])
 
   @@unique([postId, userId])
+}
+
+model LocalAuth {
+  userId       String   @id @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  tokenHash  String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  revokedAt  DateTime?
+  userAgent  String?
+  ip         String?
 }
 
 
