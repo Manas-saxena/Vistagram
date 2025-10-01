@@ -6,7 +6,7 @@ import authRouter from './routes/auth.routes';
 import cookieParser from 'cookie-parser';
 
 const app = express();
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 
 // Request logging
 app.use((req, res, next) => {

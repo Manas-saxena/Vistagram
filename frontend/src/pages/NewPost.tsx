@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ensureAnonSignIn, storage } from '../firebase';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { uploadImage } from '../services/cloudinary';
 import { apiFetch } from '../api';
 import toast from 'react-hot-toast';
 
@@ -17,10 +16,7 @@ export default function NewPost() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-    ensureAnonSignIn().catch(() => {});
-  }, []);
-
+ 
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -67,19 +63,13 @@ export default function NewPost() {
     if (!file) return toast.error('Pick a photo or use the camera.');
     setUploading(true);
     try {
-      const uid = await ensureAnonSignIn();
-      const key = `posts/${uid}/${crypto.randomUUID()}.jpg`;
-      const storageRef = ref(storage, key);
-      await new Promise<void>((resolve, reject) => {
-        const task = uploadBytesResumable(storageRef, file, { contentType: file.type });
-        task.on('state_changed', undefined, reject, () => resolve());
-      });
-      const imageUrl = await getDownloadURL(storageRef);
+      const imageUrl = await uploadImage(file);
       await apiFetch('/api/posts', { method: 'POST', body: JSON.stringify({ imageUrl, caption }) });
       toast.success('Posted');
       window.location.href = '/';
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create post');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create post';
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
